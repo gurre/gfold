@@ -18,7 +18,6 @@ go get github.com/gurre/gfold
 ```go
 // Init library with options
 g := gfold.New(
-    gfold.WithMinimalLandingError(),
     gfold.WithMinimalFuelUse()
 )
 
@@ -65,13 +64,6 @@ var (
     targetXVel = 0 // m/s
     targetYVel = 0 // m/s
     targetZVel = 0 // m/s
-)
-
-var (
-    alpha = 1/(Isp*g0) // fuel consumption parameter
-    m_wet = (m_dry+m_fuel) // wet mass kg
-    r1    = throt[0]*T_max // lower thrust bound
-    r2    = throt[1]*T_max // upper thrust bound
 )
 
 // Calculate trajectory
