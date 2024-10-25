@@ -1,5 +1,9 @@
 package gfold
 
+import (
+	"math"
+)
+
 // Nonconvex Minimum Landing Error Problem
 func minimumLandingError() {
 	// min t f ,Tc Er(t f ) − q (3)
@@ -20,6 +24,78 @@ func minimumLandingError() {
 
 	// (9) constrains the final altitude and the velocity. The time of flight t f is an optimization variable and is not fixed a priori.
 	// eT 1 r(t f ) = 0, r˙(t f ) = 0. (9)
+
+	// Define constants and initial conditions
+	const (
+		rho1 = 0.1
+		rho2 = 1.0
+		alpha = 0.1
+		m0 = 1000.0
+		mf = 100.0
+		tf = 100.0
+	)
+
+	var (
+		x = [6]float64{0, 0, 0, 0, 0, 0}
+		Tc = [3]float64{0, 0, 0}
+		m = m0
+	)
+
+	// Define the dynamics and constraints
+	A := func(omega [3]float64) [6][6]float64 {
+		return [6][6]float64{
+			{0, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 1, 0},
+			{0, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, omega[2], -omega[1]},
+			{0, 0, 0, -omega[2], 0, omega[0]},
+			{0, 0, 0, omega[1], -omega[0], 0},
+		}
+	}
+
+	B := [6][3]float64{
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0},
+		{1, 0, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	}
+
+	g := [3]float64{0, 0, -9.81}
+
+	// Define the optimization problem
+	for t := 0.0; t <= tf; t += 0.1 {
+		// Update the state
+		xDot := [6]float64{}
+		for i := 0; i < 6; i++ {
+			for j := 0; j < 6; j++ {
+				xDot[i] += A([3]float64{0, 0, 0})[i][j] * x[j]
+			}
+			for j := 0; j < 3; j++ {
+				xDot[i] += B[i][j] * (g[j] + Tc[j]/m)
+			}
+		}
+
+		for i := 0; i < 6; i++ {
+			x[i] += xDot[i] * 0.1
+		}
+
+		// Update the mass
+		mDot := -alpha * math.Sqrt(Tc[0]*Tc[0]+Tc[1]*Tc[1]+Tc[2]*Tc[2])
+		m += mDot * 0.1
+
+		// Check constraints
+		if m < m0-mf {
+			break
+		}
+		if x[2] < 0 {
+			break
+		}
+		if math.Sqrt(x[3]*x[3]+x[4]*x[4]+x[5]*x[5]) > 0 {
+			break
+		}
+	}
 }
 
 // Nonconvex Minimum Fuel Problem
@@ -34,6 +110,78 @@ func minimumFuel() {
 	// X = (r, r˙) ∈ R6 : ˙r ≤ Vmax, E r − r(t f ) −cT r − r(t f ) ≤ 0 (12)
 
 	// c  e1 tan γgs, γgs ∈ (0,π/2). (13)
+
+	// Define constants and initial conditions
+	const (
+		rho1 = 0.1
+		rho2 = 1.0
+		alpha = 0.1
+		m0 = 1000.0
+		mf = 100.0
+		tf = 100.0
+	)
+
+	var (
+		x = [6]float64{0, 0, 0, 0, 0, 0}
+		Tc = [3]float64{0, 0, 0}
+		m = m0
+	)
+
+	// Define the dynamics and constraints
+	A := func(omega [3]float64) [6][6]float64 {
+		return [6][6]float64{
+			{0, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 1, 0},
+			{0, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, omega[2], -omega[1]},
+			{0, 0, 0, -omega[2], 0, omega[0]},
+			{0, 0, 0, omega[1], -omega[0], 0},
+		}
+	}
+
+	B := [6][3]float64{
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0},
+		{1, 0, 0},
+		{0, 1, 0},
+		{0, 0, 1},
+	}
+
+	g := [3]float64{0, 0, -9.81}
+
+	// Define the optimization problem
+	for t := 0.0; t <= tf; t += 0.1 {
+		// Update the state
+		xDot := [6]float64{}
+		for i := 0; i < 6; i++ {
+			for j := 0; j < 6; j++ {
+				xDot[i] += A([3]float64{0, 0, 0})[i][j] * x[j]
+			}
+			for j := 0; j < 3; j++ {
+				xDot[i] += B[i][j] * (g[j] + Tc[j]/m)
+			}
+		}
+
+		for i := 0; i < 6; i++ {
+			x[i] += xDot[i] * 0.1
+		}
+
+		// Update the mass
+		mDot := -alpha * math.Sqrt(Tc[0]*Tc[0]+Tc[1]*Tc[1]+Tc[2]*Tc[2])
+		m += mDot * 0.1
+
+		// Check constraints
+		if m < m0-mf {
+			break
+		}
+		if x[2] < 0 {
+			break
+		}
+		if math.Sqrt(x[3]*x[3]+x[4]*x[4]+x[5]*x[5]) > 0 {
+			break
+		}
+	}
 }
 
 func (g *Gfold) SoftLandTrajectory() (
